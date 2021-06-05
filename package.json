@@ -1,0 +1,29 @@
+{
+  "name": "track-your-employees",
+  "version": "1.0.0",
+  "description": "Employee tracking and reqistry updating tool",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wadep23/track-your-employees.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wadep23/track-your-employees/issues"
+  },
+  "homepage": "https://github.com/wadep23/track-your-employees#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "express": "^4.17.1",
+    "inquirer": "^8.1.0"
+  },
+  "devDependencies": {
+    "jest": "^27.0.4"
+  }
+}
