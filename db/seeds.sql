@@ -8,30 +8,18 @@ VALUES
 
 INSERT INTO job_role (title, salary, department_id)
 VALUES
--- 1
-('Marketing Manager', 125000.00, 1),
--- 2
-('Market Research Analyst', 90000.00, 1),
--- 3
-('SEO Manager' 65000.00, 1),
--- 4
-('Public Relations Coordinator' 75000.00, 1),
--- 5
-('Project Manager' 150000.00, 2),
--- 6
-('Engineer', 120000.00, 2),
--- 7
+('Marketing Manager', 125000, 1),
+('Market Research Analyst', 90000, 1),
+('SEO Manager' 65000, 1),
+('Public Relations Coordinator' 75000, 1),
+('Project Manager' 150000, 2),
+('Engineer', 120000, 2),
 ('Dev Intern' 45,000, 2),
--- 8
-('Quality Manager', 85000.00, 3),
--- 9
-('Tester', 60000.00, 3),
--- 10
+('Quality Manager', 85000, 3),
+('Tester', 60000, 3),
 ('QA Intern' 45000.00, 3),
--- 11
-('Help Desk Manager', 55000.00, 4),
--- 12
-('Tech' 45000.00, 4);
+('Help Desk Manager', 55000, 4),
+('Tech' 45000, 4);
 
 INSERT INTO employee (first_name, last_name, job_role_id, manager_id)
 VALUES
