@@ -1,5 +1,5 @@
 const inquirer = require("inquirer")
-const mysql = require("mysql")
+const mysql = require("mysql2")
 const table = require('console.table');
 
 
@@ -10,7 +10,8 @@ const table = require('console.table');
         password: 'Password123',
         database: 'directory'
     },
-    console.log(`Now connected to the directory database!`)
+    console.log(`Now connected to the directory database!`),
+    startPrompt()
 );
 
 function startPrompt() {
@@ -63,7 +64,7 @@ function startPrompt() {
 }
 // View all employees in DB
 function viewAllEmployees() {
-    connection.query("SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(e.first_name, ' ' ,e.last_name) AS Manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;", 
+    db.query("SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(e.first_name, ' ' ,e.last_name) AS Manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;", 
     function(err, employees) {
       if (err){
         console.log(err);
@@ -107,7 +108,7 @@ function selectRole() {
     }
 
   })
-  return roleArr;
+  return roleArray;
 }
 // Chooses manager role for new employee
 var managersArr = [];
@@ -125,7 +126,7 @@ function selectManager() {
 }
 // Adds a new employee
 function addEmployee() { 
-    inquirer.prompt([
+     inquirer.prompt([
         {
           name: "firstname",
           type: "input",
@@ -167,26 +168,27 @@ function addEmployee() {
       })
 
   })
-}
+};
+
 // Update existing employee
   function updateEmployee() {
-    db.query("SELECT employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", function(err, employee) {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", function(err, employee) {
      if (err){
        console.log(err);       
     } 
      console.log(employee)
     inquirer.prompt([
           {
-            name: "lastName",
             type: "rawlist",
+            name: "id",
+            message: "What is the Employee's ID? ",
             choices: function(employee) {
-              var lastName = [];
+              var id = [];
               for (var i = 0; i < employee.length; i++) {
-                lastName.push(data[i].last_name);
+                id.push(employee[i].id);
               }
-              return lastName;
+              return id;
             },
-            message: "What is the Employee's last name? ",
           },
           {
             name: "role",
