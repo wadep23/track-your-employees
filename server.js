@@ -1,167 +1,279 @@
-const mysql = require('mysql2');
-const express = require('express');
-const { result } = require('lodash');
-const PORT = process.env.PORT || 3001;
-const app = express();
-const inputCheck = require('./utils/inputCheck');
-const bodyParser = require('body-parser');
+const inquirer = require("inquirer")
+const mysql = require("mysql")
+const table = require('console.table');
 
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
 
-const db = mysql.createConnection(
+  const db = mysql.createConnection(
     {
         host: 'localhost',
         user: 'root',
         password: 'Password123',
-        database: 'election'
+        database: 'directory'
     },
-    console.log(`Now connected to the Employee database!`)
+    console.log(`Now connected to the directory database!`)
 );
 
-// select all from employees
-app.get('/api/employees', (req, res) => {
-    const sql = `SELECT * FROM employee`;
-    db.query(sql, (err, rows) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'Success!',
-            data: rows
-        });
-    });
-});
-
-// Select roles data
-app.get('/api/roles', (req, res) => {
-    const sql = `SELECT * FROM role`;
-
-    db.query(sql, (err, rows) => {
-        if (err){
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'Success!',
-            data: rows
-        });
-    });
-});
-
-app.get('/api/departments', (req, res) => {
-    const sql = `SELECT * FROM department`;
-
-    db.query(sql, (err, rows) => {
-        if (err){
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'Success!',
-            data: rows
-        });
-    });
-});
-
-// Delete employee
-app.delete('/api/employees/:id', (req, res) => {
-    const sql = `DELETE FROM employee WHERE id = ?`;
-    const params = [req.params.id];
-
-    db.query(sql, params, (err, result) => {
-        if(err){
-            res.statusMessage(400).json({ error: res.message });
-            return;
-        }else if(!result.affectedRows){
-            res.json({
-                message: 'Employee not found!'
-            });
-        }else{
-            res.json({
-                message: 'Deleted',
-                changes: result.affectedRows,
-                id: req.params.id
-            });
-        }
-        
-    });
-});
-
-// Create employee, must use array since placeholders must match values of params
-// uses req.body for data
-app.post('/api/employees', ({ body }, res) => {
-    const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
-    if(errors){
-        res.status(400).json({ error: errors });
-        return;
+function startPrompt() {
+    inquirer.prompt([
+    {
+    type: "list",
+    message: "What would you like to do?",
+    name: "choice",
+    choices: [
+              "View All Employees?", 
+              "View All Employee's By Roles?",
+              "View all Emplyees By Deparments", 
+              "Update Employee",
+              "Add Employee?",
+              "Add Role?",
+              "Add Department?"
+            ]
     }
-    const sql = `INSERT INTO employee (first_name, last_name, job_role, manager_id)
-    VALUES (?, ?, ?, ?)`;
-    const params = [body.first_name, body.last_name, body.job_role, body.manager_id];
+]).then(function(data) {
+        switch (data.choice) {
+            case "View All Employees?":
+              viewAllEmployees();
+            break;
+    
+          case "View All Employee's By Roles?":
+              viewAllRoles();
+            break;
+          case "View all Emplyees By Deparments":
+              viewAllDepartments();
+            break;
+          
+          case "Add Employee?":
+                addEmployee();
+              break;
 
-    db.query(sql, params, (err, result) => {
-        if(err){
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'Employee Created!',
-            data: body
-        });
-    });
-});
-// Create Job Role
-app.post('/api/roles', ({ body }, res) => {
-    const errors = inputCheck(body, 'title', 'salary', 'department_id');
-    if(errors){
-        res.status(400).json({ error: errors });
-        return;
+          case "Update Employee":
+                updateEmployee();
+              break;
+      
+            case "Add Role?":
+                addRole();
+              break;
+      
+            case "Add Department?":
+                addDepartment();
+              break;
+    
+            }
+    })
+}
+// View all employees in DB
+function viewAllEmployees() {
+    connection.query("SELECT employee.first_name, employee.last_name, role.title, role.salary, department.name, CONCAT(e.first_name, ' ' ,e.last_name) AS Manager FROM employee INNER JOIN role on role.id = employee.role_id INNER JOIN department on department.id = role.department_id left join employee e on employee.manager_id = e.id;", 
+    function(err, employees) {
+      if (err){
+        console.log(err);
+      }
+      console.table(employees)
+      startPrompt()
+  })
+}
+// View all roles
+function viewAllRoles() {
+  db.query("SELECT employee.first_name, employee.last_name, role.title AS Title FROM employee JOIN role ON employee.role_id = role.id;", 
+  function(err, roles) {
+  if (err){
+    console.log(err);
+  }
+  console.table(roles)
+  startPrompt()
+  })
+}
+// View all employees by department
+function viewAllDepartments() {
+  db.query("SELECT employee.first_name, employee.last_name, department.name AS Department FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY employee.id;", 
+  function(err, employees) {
+    if (err){
+      console.log(err);
     }
-    const sql = `INSERT INTO job_role (title, salary, department_id)
-    VALUES (?, ?, ?)`;
-    const params = [body.title, body.salary, body.department_id];
+    console.table(employees)
+    startPrompt()
+  })
+}
 
-    db.query(sql, params, (err, result) => {
-        if(err){
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            message: 'Role Created!',
-            data: body
-        });
-    });
-});
-// Create department
-app.post('/api/departments', ({ body }, res) => {
-    const errors = inputCheck(body, 'department_name');
-    if(errors){
-        res.status(400).json({ error: errors });
-        return;
+// Choose role for new Employee
+var roleArray = [];
+function selectRole() {
+  db.query("SELECT * FROM role", function(err, role) {
+    if (err){
+      console.log(err);
     }
-    const sql = `INSERT INTO department (department_name)
-    VALUES (?)`;
-    const params = [body.department_name];
+    for (var i = 0; i < role.length; i++) {
+      roleArray.push(role[i].title);
+    }
 
-    db.query(sql, params, (err, result) => {
-        if(err){
-            res.status(400).json({ error: err.message });
-            return;
+  })
+  return roleArr;
+}
+// Chooses manager role for new employee
+var managersArr = [];
+function selectManager() {
+  db.query("SELECT first_name, last_name FROM employee WHERE manager_id IS NULL", function(err, data) {
+    if (err){
+      console.log(err);
+    }
+    for (var i = 0; i < data.length; i++) {
+      managersArray.push(data[i].first_name);
+    }
+
+  })
+  return managersArr;
+}
+// Adds a new employee
+function addEmployee() { 
+    inquirer.prompt([
+        {
+          name: "firstname",
+          type: "input",
+          message: "Enter their first name "
+        },
+        {
+          name: "lastname",
+          type: "input",
+          message: "Enter their last name "
+        },
+        {
+          name: "role",
+          type: "list",
+          message: "What is their role? ",
+          choices: selectRole()
+        },
+        {
+            name: "choice",
+            type: "rawlist",
+            message: "Whats their managers name?",
+            choices: selectManager()
         }
-        res.json({
-            message: 'Department Created!',
-            data: body
-        });
+    ]).then(function (employee) {
+      var roleId = selectRole().indexOf(employee.role) + 1
+      var managerId = selectManager().indexOf(employee.choice) + 1
+      db.query("INSERT INTO employee SET ?", 
+      {
+          first_name: employee.firstName,
+          last_name: employee.lastName,
+          manager_id: managerId,
+          role_id: roleId
+          
+      }, function(err,){
+          if (err){
+            console.log(err);
+          } 
+          console.table(employee)
+          startPrompt()
+      })
+
+  })
+}
+// Update existing employee
+  function updateEmployee() {
+    db.query("SELECT employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", function(err, employee) {
+     if (err){
+       console.log(err);       
+    } 
+     console.log(employee)
+    inquirer.prompt([
+          {
+            name: "lastName",
+            type: "rawlist",
+            choices: function(employee) {
+              var lastName = [];
+              for (var i = 0; i < employee.length; i++) {
+                lastName.push(data[i].last_name);
+              }
+              return lastName;
+            },
+            message: "What is the Employee's last name? ",
+          },
+          {
+            name: "role",
+            type: "rawlist",
+            message: "What is the Employees new title? ",
+            choices: selectRole()
+          },
+      ]).then(function(employee) {
+        var roleId = selectRole().indexOf(employee.role) + 1
+        db.query("UPDATE employee SET WHERE ?", 
+        {
+          last_name: employee.lastName
+           
+        }, 
+        {
+          role_id: roleId
+           
+        }, 
+        function(err){
+            if (err){
+              console.log(err);
+            }
+            console.table(employee)
+            startPrompt()
+        })
+  
     });
-});
+  });
 
-// Default error 404 response for undefined route
-app.use((req, res) => {
-    res.status(404).end();
-});
+  }
+// Add new role
+function addRole() { 
+  db.query("SELECT role.title AS Title, role.salary AS Salary FROM role",   function(err, data) {
+    inquirer.prompt([
+        {
+          name: "Title",
+          type: "input",
+          message: "What is the roles Title?"
+        },
+        {
+          name: "Salary",
+          type: "input",
+          message: "What is the Salary?"
 
-app.listen(PORT, () => {
-    console.log(`Now connected to The Matrix via ${PORT}`);
-});
+        } 
+    ]).then(function(data) {
+        db.query(
+            "INSERT INTO role SET ?",
+            {
+              title: data.Title,
+              salary: data.Salary,
+            },
+            function(err) {
+                if (err){
+                  console.log(err);
+                }
+                console.table(data);
+                startPrompt();
+            }
+        )
+
+    });
+  });
+  }
+// Add new department
+function addDepartment() { 
+
+    inquirer.prompt([
+        {
+          name: "name",
+          type: "input",
+          message: "What Department would you like to add?"
+        }
+    ]).then(function(data) {
+        var query = db.query(
+            "INSERT INTO department SET ? ",
+            {
+              name: data.name
+            
+            },
+            function(err) {
+                if (err){
+                  console.log(err);
+                }
+                console.table(data);
+                startPrompt();
+            }
+        )
+    })
+  }

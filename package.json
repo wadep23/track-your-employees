@@ -2,10 +2,10 @@
   "name": "track-your-employees",
   "version": "1.0.0",
   "description": "Employee tracking and reqistry updating tool",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "jest",
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
