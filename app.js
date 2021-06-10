@@ -135,25 +135,29 @@ function selectManager() {
 }
 
 // Update existing employee
-  function updateEmployee() {
+  function updateEmployee(employee) {
     db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", function(err, employee) {
      if (err){
        console.log(err);       
     } 
+    //  console.log(employee);
+    //  console.log('employee returned!')
+
+    //  let employeeArr = new Array();
+    //  for (employee.id in employee){
+    //    employeeArr.push(employee[employee.id])
+    //  }
      console.log(employee);
+     const ids = employee.map(employee => employee.id);
+     console.log(ids);
     inquirer.prompt([
           {
-            type: "rawlist",
+            type: "list",
             name: "id",
             message: "What is the Employee's ID? ",
-            choices: function(employee) {
-              let id = [];
-              for ( i = 0; i < employee.length; i++) {
-                id.push(employee[i].id);                
-              }
-              return id;
+            choices: ids
             },
-          },
+          
           {
             name: "role",
             type: "rawlist",
@@ -162,37 +166,33 @@ function selectManager() {
           },
       ]).then(function(employee) {
         let roleId = selectRole().indexOf(employee.role) + 1
-        db.query("UPDATE employee SET WHERE ?", 
-        {
-          id: employee.id
-           
-        }, 
-        {
-          role_id: roleId
-           
-        }, 
-        function(err){
-            if (err){
-              console.log(err);
-            }
-            console.table(employee)
+        console.log(roleId);
+        db.query("UPDATE employee SET employee.role_id = ? WHERE employee.id = ?", 
+        [
+          roleId,
+          employee.id
+        ], 
+        function(err, data){            
+            console.table(data);
             startPrompt()
         })
   
-    });
+    }).catch(err => {
+      console.log(err);
+    })
   });
   }
 
 // Adds a new employee
-function addEmployee() { 
+function addEmployee(employee) { 
   inquirer.prompt([
     {
-      name: "firstname",
+      name: "firstName",
       type: "input",
       message: "Enter their first name "
     },
     {
-      name: "lastname",
+      name: "lastName",
       type: "input",
       message: "Enter their last name "
     },
@@ -200,34 +200,35 @@ function addEmployee() {
       name: "role",
       type: "rawlist",
       message: "What is their role? ",
-      choices: selectRole()
+      choices: selectRole(employee)
     },
     {
-      name: "choice",
+      name: "manager",
       type: "rawlist",
       message: "Whats their managers name?",
-      choices: selectManager()
+      choices: selectManager(employee)
     }
   ]).then(function (employee) {
     console.log('above variables')
     let roleId = selectRole().indexOf(employee.role) + 1
     let managerId = selectManager().indexOf(employee.choice) + 1
-    db.query("INSERT INTO employee SET ?", 
-    {
-      first_name: employee.firstName,
-      last_name: employee.lastName,
-      manager_id: managerId,
-      role_id: roleId
-      
-    }, 
-    function(err,){
+    db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)", 
+    [
+      firstName,
+      lastName,
+      role,
+      manager      
+    ], 
+    function(err, data){
       if (err){
         console.log(err);
       } 
-      console.table(employee)
+      console.table(data);
       startPrompt()
     })
     
+  }).catch(err => {
+    console.log(err);
   })
 };
 
