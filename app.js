@@ -92,7 +92,7 @@ function viewAllRoles() {
 // View all employees by department
 function viewAllDepartments() {
   db.query("SELECT employee.first_name, employee.last_name, department.name AS Department FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY employee.id;", 
-  function(err, employees) {
+  (err, employees) => {
     if (err){
       console.log(err);
     }
@@ -101,9 +101,42 @@ function viewAllDepartments() {
   })
 }
 
-// function viewByManager() {
-//   db.query("SELECT * FROM employee WHERE role_id )
-// }
+function viewByManager() {
+  db.query("SELECT * FROM employee WHERE manager_id = NULL", (err, employee) => {
+    if(err){
+      throw err;
+    }
+    console.log(employee);
+    const ids = employee.map(employee => employee.manager_id)
+    console.log(ids);
+    inquirer.prompt([
+      {
+        name: "id",
+        type: "list",
+        message: "Please select a manager",
+        choices: ids
+      }
+    ]).then( employee => {
+      // let managerId = indexOf(employee.manager) + 1
+  
+      console.log("pre query");
+      db.query("SELECT * FROM employee WHERE manager_id = ?", 
+        [
+          id
+        ],
+  
+         employees => {
+          console.log("results function");
+          console.table(employees)
+          startPrompt()      
+      }).catch (err => {
+        if(err){
+          throw err;
+        }
+      })
+    })
+    })
+  }
 
 // Choose role for new Employee
 const roleArray = [];
@@ -135,18 +168,11 @@ function selectManager() {
 }
 
 // Update existing employee
-  function updateEmployee(employee) {
-    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", function(err, employee) {
-     if (err){
-       console.log(err);       
-    } 
-    //  console.log(employee);
-    //  console.log('employee returned!')
-
-    //  let employeeArr = new Array();
-    //  for (employee.id in employee){
-    //    employeeArr.push(employee[employee.id])
-    //  }
+  function updateEmployee() {
+    db.query("SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee JOIN role ON employee.role_id = role.id;", (err, employee) => {
+      if(err){
+        throw err
+      }
      console.log(employee);
      const ids = employee.map(employee => employee.id);
      console.log(ids);
@@ -172,11 +198,11 @@ function selectManager() {
           roleId,
           employee.id
         ], 
-        function(err, data){            
-            console.table(data);
+        
+        (err, employee) => {            
+            console.table(employee);
             startPrompt()
         })
-  
     }).catch(err => {
       console.log(err);
     })
@@ -184,7 +210,7 @@ function selectManager() {
   }
 
 // Adds a new employee
-function addEmployee(employee) { 
+function addEmployee() { 
   inquirer.prompt([
     {
       name: "firstName",
@@ -200,16 +226,16 @@ function addEmployee(employee) {
       name: "role",
       type: "rawlist",
       message: "What is their role? ",
-      choices: selectRole(employee)
+      choices: selectRole()
     },
     {
       name: "manager",
       type: "rawlist",
       message: "Whats their managers name?",
-      choices: selectManager(employee)
+      choices: selectManager()
     }
-  ]).then(function (employee) {
-    console.log('above variables')
+  ]).then( employee => {
+    console.log('above values')
     let roleId = selectRole().indexOf(employee.role) + 1
     let managerId = selectManager().indexOf(employee.choice) + 1
     db.query("INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)", 
@@ -219,7 +245,7 @@ function addEmployee(employee) {
       role,
       manager      
     ], 
-    function(err, data){
+    (err, data) => {
       if (err){
         console.log(err);
       } 

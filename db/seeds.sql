@@ -27,7 +27,7 @@ VALUES
 ('Maria', 'Rodriguez', NULL, 5),
 ('Robert', 'Johnson', NULL,  8),
 ('David', 'Hernandez', NULL,  11),
-('James', 'Smith', 1, 2),
+('James', 'Brown', 1, 2),
 ('Mary', 'Johnson', 1, 3),
 ('Michael', 'Brown', 1, 4),
 ('Paul', 'Thomas', 2, 6),
